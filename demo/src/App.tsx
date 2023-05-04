@@ -18,9 +18,9 @@ const ort = require("onnxruntime-web");
 import npyjs from "npyjs";
 
 // Define image, embedding and model paths
-const IMAGE_PATH = "/assets/data/dogs.jpg";
-const IMAGE_EMBEDDING = "/assets/data/dogs_embedding.npy";
-const MODEL_DIR = "/model/sam_onnx_quantized_example.onnx";
+const IMAGE_PATH = "/assets/data/bam1.jpg";
+const IMAGE_EMBEDDING = "/assets/data/bam_embedding.npy";
+const MODEL_DIR = "/assets/data/bam_sam.onnx";
 
 const App = () => {
   const {
@@ -115,6 +115,14 @@ const App = () => {
         // Run the SAM ONNX model with the feeds returned from modelData()
         const results = await model.run(feeds);
         const output = results[model.outputNames[0]];
+
+        // const [max, min, avg] = maxMinAvg(output.data);
+        // console.log("max: ", max, "min: ", min, "avg: ", avg)
+        const area = calculateArea(output.data);
+        if (area > 0) {
+          console.log("area: " + area + " pixels");
+        }
+        
         // The predicted mask returned from the ONNX model is an array which is 
         // rendered as an HTML image using onnxMaskToImage() from maskUtils.tsx.
         setMaskImg(onnxMaskToImage(output.data, output.dims[2], output.dims[3]));
@@ -126,5 +134,31 @@ const App = () => {
 
   return <Stage />;
 };
+
+function calculateArea(arr) {
+  var area = 0;
+  for (var i = 0; i < arr.length; i++) {
+      if (arr[i] > 0.0) {
+          area += 1;
+      }
+  }
+  return area;
+}
+
+function maxMinAvg(arr) {
+  var max = arr[0];
+  var min = arr[0];
+  var sum = arr[0]; //changed from original post
+  for (var i = 1; i < arr.length; i++) {
+      if (arr[i] > max) {
+          max = arr[i];
+      }
+      if (arr[i] < min) {
+          min = arr[i];
+      }
+      sum = sum + arr[i];
+  }
+  return [max, min, sum/arr.length]; //changed from original post
+}
 
 export default App;
